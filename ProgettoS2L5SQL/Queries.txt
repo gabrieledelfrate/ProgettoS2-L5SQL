@@ -1,0 +1,129 @@
+GestioneContravvenzioniBagheria
+
+CREATE TABLE ANAGRAFICA (
+    IDAnagrafica INT PRIMARY KEY,
+    Cognome VARCHAR(50),
+    Nome VARCHAR(50),
+    Indirizzo VARCHAR(100),
+    Città VARCHAR(50),
+    CAP VARCHAR(10),
+    CodFisc VARCHAR(16)
+);
+
+CREATE TABLE TIPO_VIOLAZIONE (
+    IDViolazione INT PRIMARY KEY,
+    Descrizione VARCHAR(100)
+);
+
+CREATE TABLE AGENTI (
+    IDAgente INT PRIMARY KEY,
+    Nome VARCHAR(50),
+    Cognome VARCHAR(50),
+    Matricola VARCHAR(20)
+);
+
+CREATE TABLE VERBALE (
+    IDVerbale INT PRIMARY KEY,
+    DataViolazione DATE,
+    IndirizzoViolazione VARCHAR(100),
+    IDAgente INT,
+    DataTrascrizioneVerbale DATE,
+    Importo DECIMAL(10, 2),
+    DecurtamentoPunti INT,
+    IDAnagrafica INT,
+    IDViolazione INT,
+    FOREIGN KEY (IDAnagrafica) REFERENCES dbo.ANAGRAFICA(IDAnagrafica),
+    FOREIGN KEY (IDViolazione) REFERENCES dbo.TIPO_VIOLAZIONE(IDViolazione),
+    FOREIGN KEY (IDAgente) REFERENCES dbo.AGENTI(IDAgente)
+);
+
+
+1. Conteggio dei verbali trascritti:
+
+SELECT COUNT(*) AS NumeroVerbaliTrascritti
+FROM VERBALE;
+
+2.Conteggio dei verbali trascritti raggruppati per anagrafe:
+
+SELECT a.Cognome, a.Nome, COUNT(v.IDVerbale) AS NumeroVerbali
+FROM ANAGRAFICA a
+LEFT JOIN VERBALE v ON a.IDAnagrafica = v.IDAnagrafica
+GROUP BY a.Cognome, a.Nome;
+
+3.Conteggio dei verbali trascritti raggruppati per tipo di violazione:
+
+SELECT tv.Descrizione, COUNT(v.IDVerbale) AS NumeroVerbali
+FROM TIPO_VIOLAZIONE tv
+LEFT JOIN VERBALE v ON tv.IDViolazione = v.IDViolazione
+GROUP BY tv.Descrizione;
+
+4.Totale dei punti decurtati per ogni anagrafe:
+
+SELECT a.Cognome, a.Nome, SUM(v.DecurtamentoPunti) AS TotalePuntiDecurtati
+FROM ANAGRAFICA a
+LEFT JOIN VERBALE v ON a.IDAnagrafica = v.IDAnagrafica
+GROUP BY a.Cognome, a.Nome;
+
+5.Cognome, Nome, Data violazione, Indirizzo violazione, 
+importo e punti decurtati per tutti gli anagrafici residenti a Palermo:
+
+SELECT a.Cognome, a.Nome, v.DataViolazione, v.IndirizzoViolazione, v.Importo, v.DecurtamentoPunti
+FROM ANAGRAFICA a
+JOIN VERBALE v ON a.IDAnagrafica = v.IDAnagrafica
+WHERE a.Città = 'Palermo';
+
+6.Cognome, Nome, Indirizzo, Data violazione, 
+importo e punti decurtati per le violazioni fatte tra il febbraio 2009 e luglio 2009:
+
+SELECT a.Cognome, a.Nome, a.Indirizzo, v.DataViolazione, v.Importo, v.DecurtamentoPunti
+FROM ANAGRAFICA a
+JOIN VERBALE v ON a.IDAnagrafica = v.IDAnagrafica
+WHERE v.DataViolazione BETWEEN '2009-02-01' AND '2009-07-31';
+
+7.Totale degli importi per ogni anagrafico:
+
+SELECT a.Cognome, a.Nome, SUM(v.Importo) AS TotaleImporti
+FROM ANAGRAFICA a
+JOIN VERBALE v ON a.IDAnagrafica = v.IDAnagrafica
+GROUP BY a.Cognome, a.Nome;
+
+8.Visualizzazione di tutti gli anagrafici residenti a Palermo:
+
+SELECT *
+FROM ANAGRAFICA
+WHERE Città = 'Palermo';
+
+9.Query parametrica che visualizzi Data violazione,
+Importo e decurtamento punti relativi ad una certa data:
+
+DECLARE @DataViolazioneParametro DATE = '2022-01-10';
+
+SELECT DataViolazione, Importo, DecurtamentoPunti
+FROM VERBALE
+WHERE DataViolazione = @DataViolazioneParametro;
+
+10.Conteggio delle violazioni contestate raggruppate per IDAgente di Polizia:
+
+SELECT a.IDAgente, COUNT(v.IDVerbale) AS NumeroViolazioniContestate
+FROM AGENTI a
+LEFT JOIN VERBALE v ON a.IDAgente = v.IDAgente
+GROUP BY a.IDAgente;
+
+11.Cognome, Nome, Indirizzo, Data violazione, 
+Importo e punti decurtati per tutte le violazioni che superino il decurtamento di 5 punti:
+
+SELECT a.Cognome, a.Nome, a.Indirizzo, v.DataViolazione, v.Importo, v.DecurtamentoPunti
+FROM ANAGRAFICA a
+JOIN VERBALE v ON a.IDAnagrafica = v.IDAnagrafica
+WHERE v.DecurtamentoPunti > 5;
+
+12.Cognome, Nome, Indirizzo, Data violazione, 
+Importo e punti decurtati per tutte le violazioni che superino l'importo di 400 euro:
+
+SELECT a.Cognome, a.Nome, a.Indirizzo, v.DataViolazione, v.Importo, v.DecurtamentoPunti
+FROM ANAGRAFICA a
+JOIN VERBALE v ON a.IDAnagrafica = v.IDAnagrafica
+WHERE v.Importo > 400.00;
+
+
+

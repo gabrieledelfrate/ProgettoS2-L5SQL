@@ -1,0 +1,36 @@
+1. Una stored procedure parametrica che, ricevendo in input un anno, 
+visualizzi l'elenco delle contravvenzioni effettuate in quel determinato anno:
+
+CREATE PROCEDURE VisualizzaContravvenzioniPerAnno
+    @Anno INT
+AS
+BEGIN
+    SELECT v.IDVerbale, v.DataViolazione, v.IndirizzoViolazione, a.Cognome, a.Nome, tv.Descrizione, v.Importo, v.DecurtamentoPunti
+    FROM VERBALE v
+    JOIN ANAGRAFICA a ON v.IDAnagrafica = a.IDAnagrafica
+    JOIN TIPO_VIOLAZIONE tv ON v.IDViolazione = tv.IDViolazione
+    WHERE YEAR(v.DataViolazione) = @Anno;
+END;
+
+2. Una stored procedure parametrica che, ricevendo in input una data, 
+visualizzi il totale dei punti decurtati in quella determinata data:
+
+CREATE PROCEDURE VisualizzaTotalePuntiDecurtatiPerData
+    @Data DATE
+AS
+BEGIN
+    SELECT SUM(DecurtamentoPunti) AS TotalePuntiDecurtati
+    FROM VERBALE
+    WHERE DataViolazione = @Data;
+END;
+
+3. Una stored procedure che consenta di eliminare un determinato 
+verbale identificandolo con il proprio identificativo:
+
+CREATE PROCEDURE EliminaVerbale
+    @IDVerbale INT
+AS
+BEGIN
+    DELETE FROM VERBALE
+    WHERE IDVerbale = @IDVerbale;
+END;
